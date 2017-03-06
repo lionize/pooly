@@ -21,6 +21,11 @@ defmodule Pooly.Server do
   def checkin(worker_pid) do
     GenServer.cast(__MODULE__, {:checkin, worker_pid})
   end
+
+  def status do
+    GenServer.call(__MODULE__, :status)
+  end
+
   #
   # Callbacks
   #
@@ -57,6 +62,10 @@ defmodule Pooly.Server do
       [] ->
         {:reply, :noproc, state}
     end
+  end
+
+  def handle_call(:status, _from, %{workers: workers, monitors: monitors} = state) do
+    {:reply, {length(workers), :ets.info(monitors, :size)}, state}
   end
 
   def handle_cast({:checkin, worker}, %{workers: workers, monitors: monitors} = state) do
