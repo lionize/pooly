@@ -107,6 +107,10 @@ defmodule Pooly.PoolServer do
     end
   end
 
+  def handle_info({:EXIT, worker_sup, reason}, state = %{worker_sup: worker_sup}) do
+    {:stop, reason, state}
+  end
+
   def handle_info({:EXIT, pid, _reason}, state = %{monitors: monitors,
     workers: workers, pool_sup: pool_sup}) do
     case :ets.lookup(monitors, pid) do
@@ -119,10 +123,6 @@ defmodule Pooly.PoolServer do
       _ ->
         {:noreply, state}
     end
-  end
-
-  def handle_info({:EXIT, worker_sup, reason}, state = %{worker_sup: worker_sup}) do
-    {:stop, reason, state}
   end
 
   def terminate(_reason, _state) do
@@ -151,6 +151,7 @@ defmodule Pooly.PoolServer do
 
   defp new_worker(sup) do
     {:ok, worker} = Supervisor.start_child(sup, [[]])
+    Process.link(worker)
     worker
   end
 
